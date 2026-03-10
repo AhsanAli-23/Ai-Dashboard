@@ -1,0 +1,517 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Purple Globe Dashboard</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #1a0029;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  #bg3d {
+    position: fixed;
+    inset: 0;
+    display: block;
+    z-index: 0;
+  }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .sidebar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    max-width: 320px;
+    pointer-events: auto;
+  }
+  .title {
+    margin: 0 0 6px 0;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.2;
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(155, 89, 255, 0.55), 0 0 2px rgba(0,0,0,0.6);
+  }
+  .subtitle {
+    margin: 0;
+    font-weight: 500;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.55);
+  }
+  .divider {
+    width: 280px;
+    height: 2px;
+    margin: 10px 0;
+    background: linear-gradient(90deg, #9b59ff, #66ccff);
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(155, 89, 255, 0.6);
+  }
+  .card {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    width: 280px;
+    backdrop-filter: blur(10px);
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .card-number {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 2px 0;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+  .card-percent {
+    font-size: 12px;
+    color: #66ccff;
+    margin: 0 0 8px 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(102, 204, 255, 0.2);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    width: 50%;
+    height: 100%;
+    background: #66ccff;
+    border-radius: 999px;
+  }
+  .card.campaign-card {
+    width: 913px;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    padding: 0;
+    margin-top: 100px;
+  }
+  .polar-container {
+    width: 305px;
+    height: 200px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 12px;
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+  }
+  .right-cards {
+    position: absolute;
+    top: 30px;
+    right: 20px;
+    width: 330px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: auto;
+  }
+  .mini-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 10px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .mini-card canvas {
+    max-width: 80px;
+    max-height: 50px;
+    flex-shrink: 0;
+  }
+  .mini-card-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg3d"></canvas>
+
+<div class="overlay">
+  <div class="sidebar">
+    <h1 class="title">AI Command Centre</h1>
+    <div class="divider"></div>
+    <p class="subtitle">An overview of your AI performance</p>
+
+    <div class="card">
+      <p class="card-title">Total Leads</p>
+      <p class="card-number">1204</p>
+      <p class="card-percent">+15% vs last month</p>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Leads Contacted</p>
+      <p class="card-number">22</p>
+      <p class="card-percent">Half of goal</p>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 50%; background: #549be2;"></div>
+      </div>
+    </div>
+
+    <div class="card campaign-card">
+      <p class="card-title">Campaign Performance</p>
+      <p class="card-percent">Leads vs. Replies vs. Positive Replies vs. Follow-ups vs. Conversions</p>
+      <canvas id="campaignChart" style="width:100%; height:210px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Right-Side Cards -->
+  <div class="right-cards">
+    <div class="mini-card">
+      <canvas id="emailsSentChart"></canvas>
+      <div class="mini-card-text">
+        <p class="card-title">Emails Sent</p>
+        <p class="card-number">8,312</p>
+        <p class="card-percent">+22% vs last month</p>
+      </div>
+    </div>
+    <div class="mini-card">
+      <canvas id="positiveRepliesChart"></canvas>
+      <div class="mini-card-text">
+        <p class="card-title">Positive Replies</p>
+        <p class="card-number">89</p>
+        <p class="card-percent">-2 vs last month</p>
+      </div>
+    </div>
+    <div class="polar-container">
+      <p class="card-title">Engagement Field</p>
+      <canvas id="polarChart" style="width:180px; height:110px;"></canvas>
+    </div>
+
+    <!-- AI Activity Feed Table -->
+    <div class="mini-card" style="flex-direction: column; align-items: flex-start; gap: 6px; width: 310px;">
+      <p class="card-title" style="font-size: 14px;">AI Activity Feed</p>
+      <table style="width: 100%; height: 180px; font-size: 12px; color: rgba(255,255,255,0.85); border-collapse: collapse;">
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td>Found 28 new leads in the SaaS industry in San Francisco.</td>
+            <td style="text-align: right; white-space: nowrap; font-weight: bold; font-size: 9px;">2m ago</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td>Sent personalized email to Alice Johnson at Innovate Inc.</td>
+            <td style="text-align: right; font-weight: bold; font-size: 9px;">5m ago</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td>Qualified Quantum Computing Co as a 'warm' lead (Score: 82).</td>
+            <td style="text-align: right; font-weight: bold; font-size: 9px;">1h ago</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td>Scheduled a call with NextGen Builders for tomorrow at 10 AM.</td>
+            <td style="text-align: right; font-weight: bold; font-size: 9px;">3h ago</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td>Sent a follow-up email to Data Solutions LLC.</td>
+            <td style="text-align: right; font-weight: bold; font-size: 9px;">5h ago</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Bar + Line Chart (minimal, no ticks or grids)
+const polarCtx = document.getElementById('polarChart').getContext('2d');
+
+new Chart(polarCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Leads Found', 'Contacted', 'Replied', 'Positive Reply', 'Meeting Set'],
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Count',
+        data: [1204, 900, 450, 200, 80],
+        backgroundColor: 'rgba(102, 204, 255, 0.6)',
+        borderColor: 'rgba(102, 204, 255, 1)',
+        borderWidth: 1
+      },
+      {
+        type: 'line',
+        label: 'Trend',
+        data: [1204, 900, 450, 200, 80],
+        borderColor: '#ffcc66',
+        backgroundColor: '#ffcc66',
+        fill: false,
+        tension: 0.3,
+        borderWidth: 2,
+        pointBackgroundColor: '#ffcc66',
+        pointBorderColor: '#fff',
+        pointRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true }
+    },
+    scales: {
+      x: {
+        ticks: { display: false }, // removes numbers/text under bars
+        grid: { display: false, drawBorder: false }
+      },
+      y: {
+        ticks: { display: false }, // removes side numbers
+        grid: { display: false, drawBorder: false }
+      }
+    }
+  }
+});
+
+// Mini Donut Chart - Emails Sent
+new Chart(document.getElementById('emailsSentChart').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [8312, 10000 - 8312],
+      backgroundColor: ['#66ccff', 'rgba(255,255,255,0.1)'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '70%',
+    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+  }
+});
+
+// Mini Donut Chart - Positive Replies
+new Chart(document.getElementById('positiveRepliesChart').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [89, 200 - 89],
+      backgroundColor: ['#2ecc71', 'rgba(255,255,255,0.1)'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '70%',
+    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+  }
+});
+
+// Campaign Performance Chart
+const ctx = document.getElementById('campaignChart').getContext('2d');
+const gradientLeads = ctx.createLinearGradient(0, 0, 0, 200);
+gradientLeads.addColorStop(0, 'rgba(155, 89, 255, 0.6)');
+gradientLeads.addColorStop(1, 'rgba(155, 89, 255, 0)');
+const gradientReplies = ctx.createLinearGradient(0, 0, 0, 200);
+gradientReplies.addColorStop(0, 'rgba(102, 204, 255, 0.6)');
+gradientReplies.addColorStop(1, 'rgba(102, 204, 255, 0)');
+const gradientPositive = ctx.createLinearGradient(0, 0, 0, 200);
+gradientPositive.addColorStop(0, 'rgba(46, 204, 113, 0.6)');
+gradientPositive.addColorStop(1, 'rgba(46, 204, 113, 0)');
+const gradientFollowUps = ctx.createLinearGradient(0, 0, 0, 200);
+gradientFollowUps.addColorStop(0, 'rgba(255, 204, 102, 0.6)');
+gradientFollowUps.addColorStop(1, 'rgba(255, 204, 102, 0)');
+const gradientConversions = ctx.createLinearGradient(0, 0, 0, 200);
+gradientConversions.addColorStop(0, 'rgba(255, 102, 102, 0.6)');
+gradientConversions.addColorStop(1, 'rgba(255, 102, 102, 0)');
+
+const campaignChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Q4 Tech', 'Manufacturing', 'Healthcare', 'Finance', 'Real Estate'],
+    datasets: [
+      { data: [400, 300, 200, 280, 180], borderColor: '#9b59ff', backgroundColor: gradientLeads, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, label: 'Leads' },
+      { data: [20, 15, 10, 8, 6], borderColor: '#66ccff', backgroundColor: gradientReplies, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, label: 'Replies' },
+      { data: [10, 8, 5, 7, 3], borderColor: '#2ecc71', backgroundColor: gradientPositive, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, label: 'Positive Replies' },
+      { data: [15, 12, 8, 6, 4], borderColor: '#ffcc66', backgroundColor: gradientFollowUps, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, label: 'Follow-ups' },
+      { data: [5, 4, 3, 2, 1], borderColor: '#ff6666', backgroundColor: gradientConversions, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, label: 'Conversions' }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#ffffff' } },
+      y: { ticks: { color: '#ffffff' } }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'linear'
+    }
+  },
+  plugins: [{
+    id: 'clearBackground',
+    beforeDraw: (chart) => {
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.clearRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+      ctx.restore();
+    }
+  }]
+});
+
+// Animation for continuous scrolling of Campaign Performance Chart
+const originalLabels = ['Q4 Tech', 'Manufacturing', 'Healthcare', 'Finance', 'Real Estate'];
+const originalLeads = [400, 300, 200, 280, 180];
+const originalReplies = [20, 15, 10, 8, 6];
+const originalPositive = [10, 8, 5, 7, 3];
+const originalFollowUps = [15, 12, 8, 6, 4];
+const originalConversions = [5, 4, 3, 2, 1];
+
+function animateCampaignChart() {
+  // Shift labels and data
+  const newLabels = [...campaignChart.data.labels];
+  const newLeads = [...campaignChart.data.datasets[0].data];
+  const newReplies = [...campaignChart.data.datasets[1].data];
+  const newPositive = [...campaignChart.data.datasets[2].data];
+  const newFollowUps = [...campaignChart.data.datasets[3].data];
+  const newConversions = [...campaignChart.data.datasets[4].data];
+
+  // Move first element to the end
+  newLabels.push(newLabels.shift());
+  newLeads.push(newLeads.shift());
+  newReplies.push(newReplies.shift());
+  newPositive.push(newPositive.shift());
+  newFollowUps.push(newFollowUps.shift());
+  newConversions.push(newConversions.shift());
+
+  // Update chart data
+  campaignChart.data.labels = newLabels;
+  campaignChart.data.datasets[0].data = newLeads;
+  campaignChart.data.datasets[1].data = newReplies;
+  campaignChart.data.datasets[2].data = newPositive;
+  campaignChart.data.datasets[3].data = newFollowUps;
+  campaignChart.data.datasets[4].data = newConversions;
+
+  // Update chart with animation
+  campaignChart.update();
+
+  // Schedule next animation frame
+  setTimeout(animateCampaignChart, 2000); // Adjust speed by changing delay (2000ms = 2 seconds)
+}
+
+// Start the animation
+animateCampaignChart();
+
+// Three.js Globe
+const canvas = document.getElementById('bg3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a0029);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 25);
+scene.add(new THREE.AmbientLight(0x5533aa, 1.5));
+const pointLight = new THREE.PointLight(0xaa77ff, 3, 200);
+pointLight.position.set(10, 15, 10);
+scene.add(pointLight);
+const R = 4;
+const textureLoader = new THREE.TextureLoader();
+const globeMat = new THREE.MeshPhongMaterial({
+  map: textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', tex => { tex.colorSpace = THREE.SRGBColorSpace; }),
+  bumpMap: textureLoader.load('https://threejs.org/examples/textures/planets/earth_bump_2048.jpg'),
+  bumpScale: 0.3,
+  specular: new THREE.Color(0x50),
+  shininess: 30
+});
+const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 128, 128), globeMat);
+scene.add(globe);
+const nightTexture = textureLoader.load('https://threejs.org/examples/textures/planets/earth_lights_2048.png');
+const nightMaterial = new THREE.MeshBasicMaterial({ map: nightTexture, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.6 });
+const nightGlobe = new THREE.Mesh(new THREE.SphereGeometry(R + 0.01, 64, 64), nightMaterial);
+scene.add(nightGlobe);
+const atmosphereGeo = new THREE.SphereGeometry(R * 1.15, 64, 64);
+const atmosphereMat = new THREE.ShaderMaterial({
+  uniforms: { glowColor: { value: new THREE.Color(0x66ccff) }, viewVector: { value: camera.position } },
+  vertexShader: `
+    uniform vec3 viewVector; varying float intensity;
+    void main() {
+      vec3 vNormal = normalize(normalMatrix * normal);
+      vec3 vNormel = normalize(normalMatrix * viewVector);
+      intensity = pow(0.7 - dot(vNormal, vNormel), 3.0);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 glowColor; varying float intensity;
+    void main() { gl_FragColor = vec4(glowColor, 1.0) * intensity; }
+  `,
+  side: THREE.BackSide,
+  blending: THREE.AdditiveBlending,
+  transparent: true
+});
+scene.add(new THREE.Mesh(atmosphereGeo, atmosphereMat));
+const orbitCount = 4;
+const satellites = [];
+const orbitColors = [0xff99ff, 0x99ccff, 0xffffff, 0xaa77ff];
+for (let i = 0; i < orbitCount; i++) {
+  const orbitRadius = R + 2 + i * 1.2;
+  const orbitGeo = new THREE.RingGeometry(orbitRadius - 0.01, orbitRadius + 0.01, 128);
+  const orbitMat = new THREE.MeshBasicMaterial({ color: orbitColors[i % orbitColors.length], side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+  const orbit = new THREE.Mesh(orbitGeo, orbitMat);
+  orbit.rotation.x = Math.random() * Math.PI;
+  orbit.rotation.y = Math.random() * Math.PI;
+  scene.add(orbit);
+  const satGeo = new THREE.SphereGeometry(0.15, 16, 16);
+  const satMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const sat = new THREE.Mesh(satGeo, satMat);
+  sat.userData = { radius: orbitRadius, angle: Math.random() * Math.PI * 2, speed: 0.002 + Math.random() * 0.002, tiltX: orbit.rotation.x, tiltY: orbit.rotation.y };
+  satellites.push(sat);
+  scene.add(sat);
+}
+const starGeo = new THREE.BufferGeometry();
+const starCount = 2000;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 800;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1, transparent: true, opacity: 0.8 }));
+scene.add(stars);
+function animate() {
+  requestAnimationFrame(animate);
+  globe.rotation.y += 0.001;
+  nightGlobe.rotation.y += 0.001;
+  satellites.forEach(sat => {
+    sat.userData.angle += sat.userData.speed;
+    const x = sat.userData.radius * Math.cos(sat.userData.angle);
+    const z = sat.userData.radius * Math.sin(sat.userData.angle);
+    sat.position.set(x, 0, z);
+    sat.rotation.x = sat.userData.tiltX;
+    sat.rotation.y = sat.userData.tiltY;
+  });
+  renderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+</script>
+</body>
+</html>
